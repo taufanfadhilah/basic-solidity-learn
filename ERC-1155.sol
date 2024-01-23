@@ -6,8 +6,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 
-contract ERC1155Learn is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
+contract ERC1155Learn is
+    ERC1155,
+    Ownable,
+    ERC1155Pausable,
+    ERC1155Supply,
+    PaymentSplitter
+{
     uint256 public publicPrice = 0.02 ether;
     uint256 public allowListPrice = 0.01 ether;
     uint256 public maxSupply = 1;
@@ -19,9 +26,14 @@ contract ERC1155Learn is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
     mapping(address => bool) allowList;
     mapping(address => uint256) purchasesPerWallet;
 
-    constructor(address initialOwner)
+    constructor(
+        address initialOwner,
+        address[] memory _payess,
+        uint256[] memory _shares
+    )
         ERC1155("ipfs://Qmaa6TuP2s9pSKczHF4rwWhTKUdygrrDs8RmYYqCjP3Hye/")
         Ownable(initialOwner)
+        PaymentSplitter(_payess, _shares)
     {}
 
     // Create an edit function that will edit the mint windows
@@ -69,7 +81,10 @@ contract ERC1155Learn is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
     }
 
     function mint(uint256 id, uint256 amount) internal {
-        require(purchasesPerWallet[msg.sender] + amount <= maxPerWallet, "Wallet limit reach");
+        require(
+            purchasesPerWallet[msg.sender] + amount <= maxPerWallet,
+            "Wallet limit reach"
+        );
         require(id < 2, "Sorry look like your are trying to mint the wrong ID");
         require(
             totalSupply(id) + amount <= maxSupply,
